@@ -1,8 +1,14 @@
 <template>
   <!--歌单详情-->
-  <div class="details">
-    <mm-loading v-model="mmLoadShow" />
-    <music-list :list="list" @select="selectItem" />
+  <div>
+    <play-btn
+      :list="list"
+      @refreshList="refreshList"
+    />
+    <div class="details">
+      <mm-loading v-model="mmLoadShow" />
+      <music-list :list="list" @select="selectItem" />
+    </div>
   </div>
 </template>
 
@@ -11,12 +17,14 @@ import { mapActions } from 'vuex'
 import { getPlaylistDetail } from 'api'
 import MmLoading from 'base/mm-loading/mm-loading'
 import MusicList from 'components/music-list/music-list'
+import PlayBtn from 'components/play-btn/play-btn'
 import { loadMixin } from '@/utils/mixin'
 
 export default {
   name: 'Detail',
   components: {
     MmLoading,
+    PlayBtn,
     MusicList
   },
   mixins: [loadMixin],
@@ -27,13 +35,25 @@ export default {
   },
   created() {
     // 获取歌单详情
-    getPlaylistDetail(this.$route.params.id).then(playlist => {
+    getPlaylistDetail(this.$route.params.id).then((playlist) => {
       document.title = `${playlist.name} - mmPlayer在线音乐播放器`
       this.list = playlist.tracks
       this._hideLoad()
     })
   },
   methods: {
+    refreshList() {
+      if (this.mmLoadShow) {
+        return
+      }
+      this.list = []
+      this.mmLoadShow = true
+      getPlaylistDetail(this.$route.params.id).then((playlist) => {
+        document.title = `${playlist.name} - mmPlayer在线音乐播放器`
+        this.list = playlist.tracks
+        this._hideLoad()
+      })
+    },
     // 播放暂停事件
     selectItem(item, index) {
       this.selectPlay({

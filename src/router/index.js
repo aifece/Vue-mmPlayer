@@ -20,19 +20,24 @@ const routes = [
         }
       },
       {
+        path: '/music/talist', // 正在播放列表
+        component: () => import('pages/taList/taList'),
+        meta: {
+          'title': 'Ta在听'
+        }
+      },
+      {
         path: '/music/userlist', // 我的歌单
         component: () => import('pages/userList/userList'),
         meta: {
-          title: '我的歌单',
-          keepAlive: true
+          title: '我的歌单'
         }
       },
       {
         path: '/music/toplist', // 排行榜列表
         component: () => import('pages/topList/topList'),
         meta: {
-          title: '排行榜',
-          keepAlive: true
+          title: '排行榜'
         }
       },
       {

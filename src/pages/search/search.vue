@@ -4,11 +4,12 @@
     <mm-loading v-model="mmLoadShow" />
     <div class="search-head">
       <span
-        v-for="(item, index) in Artists"
+        v-for="(item, index) in searchTypeList"
         :key="index"
-        @click="clickHot(item.first)"
+        :style="{ true: 'color:#FFFFFF;', false: '' }[item.type == searchType]"
+        @click="switchType(item.type)"
       >
-        {{ item.first }}
+        {{ item.name }}
       </span>
       <input
         v-model.trim="searchValue"
@@ -20,9 +21,16 @@
     </div>
     <music-list
       ref="musicList"
+      :hidden="searchType === 1002"
       :list="list"
       :list-type="2"
       @select="selectItem"
+      @pullUp="pullUpLoad"
+    />
+    <user-list
+      ref="userList"
+      :hidden="searchType !== 1002"
+      :list="userList"
       @pullUp="pullUpLoad"
     />
   </div>
@@ -30,10 +38,11 @@
 
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { search, searchHot, getMusicDetail } from 'api'
+import { search, getMusicDetail } from 'api'
 import formatSongs from '@/utils/song'
 import MmLoading from 'base/mm-loading/mm-loading'
 import MusicList from 'components/music-list/music-list'
+import UserList from 'components/user-list/user-list'
 import { loadMixin } from '@/utils/mixin'
 import { toHttps } from '@/utils/util'
 
@@ -41,14 +50,26 @@ export default {
   name: 'Search',
   components: {
     MmLoading,
-    MusicList
+    MusicList,
+    UserList
   },
   mixins: [loadMixin],
   data() {
     return {
       searchValue: '', // 搜索关键词
-      Artists: [], // 热搜数组
+      searchTypeList: [
+        {
+          name: '歌曲',
+          type: 1
+        },
+        {
+          name: '用户',
+          type: 1002
+        }
+      ], // 热搜数组
+      searchType: 1,
       list: [], // 搜索数组
+      userList: [],
       page: 0, // 分页
       lockUp: true // 是否锁定上拉加载事件,默认锁定
     }
@@ -68,11 +89,7 @@ export default {
     }
   },
   created() {
-    // 获取热搜
-    searchHot().then(({ result }) => {
-      this.Artists = result.hots.slice(0, 5)
-      this.mmLoadShow = false
-    })
+    this._hideLoad()
   },
   methods: {
     // 点击热搜
@@ -89,23 +106,45 @@ export default {
       this.mmLoadShow = true
       this.page = 0
       if (this.list.length > 0) {
-        this.$refs.musicList.scrollTo()
+        if (this.searchType === 1002) {
+          this.$refs.userList.scrollTo()
+        } else {
+          this.$refs.musicList.scrollTo()
+        }
       }
-      search(this.searchValue).then(({ result }) => {
-        this.list = formatSongs(result.songs)
+      search(this.searchValue, this.searchType).then(({ result }) => {
+        if (this.searchType === 1002) {
+          this.userList = result.userprofiles
+        } else {
+          if (!result.songs) {
+            this.$mmToast('没有更多歌曲啦！')
+            return
+          }
+          this.list = formatSongs(result.songs)
+        }
         this._hideLoad()
       })
+    },
+    switchType(type) {
+      this.searchType = type
+      this.onEnter()
     },
     // 滚动加载事件
     pullUpLoad() {
       this.page += 1
-      search(this.searchValue, this.page).then(({ result }) => {
-        if (!result.songs) {
-          this.$mmToast('没有更多歌曲啦！')
-          return
+      search(this.searchValue, this.searchType, this.page).then(
+        ({ result }) => {
+          if (this.searchType === 1002) {
+            this.userList = [...this.userList, ...result.userprofiles]
+          } else {
+            if (!result.songs) {
+              this.$mmToast('没有更多歌曲啦！')
+              return
+            }
+            this.list = [...this.list, ...formatSongs(result.songs)]
+          }
         }
-        this.list = [...this.list, ...formatSongs(result.songs)]
-      })
+      )
     },
     // 播放歌曲
     async selectItem(music) {
@@ -119,7 +158,7 @@ export default {
     },
     // 获取歌曲详情
     _getMusicDetail(id) {
-      return getMusicDetail(id).then(res => res.songs[0].al.picUrl)
+      return getMusicDetail(id).then((res) => res.songs[0].al.picUrl)
     },
     ...mapMutations({
       setPlaying: 'SET_PLAYING'

@@ -9,8 +9,11 @@
     <dl class="user">
       <template v-if="user.userId">
         <router-link class="user-info" to="/music/userlist" tag="dt">
-          <img class="avatar" :src="`${user.avatarUrl}?param=50y50`" />
-          <span>{{ user.nickname }}</span>
+          <div class="all-avatar">
+            <img class="avatar avatar-show" src="https://p1.music.126.net/RLeBJe4D1ZzUtltxfoKDMg==/109951163250239066.jpg?param=50y50`" />
+            <img class="avatar avatar-hide" :src="`${user.avatarUrl}?param=50y50`" />
+            <span class="avatar-hide">{{ user.nickname }}</span>
+          </div>
         </router-link>
         <dd class="user-btn" @click="openDialog(2)">退出</dd>
       </template>
@@ -177,6 +180,23 @@ export default {
       float: left;
       margin-right: 15px;
       cursor: pointer;
+      position: relative;
+      .all-avatar:hover {
+        .avatar-show {
+          visibility: hidden;
+        }
+        .avatar-hide {
+          visibility: visible;
+        }
+      }
+      .avatar-hide {
+          visibility: hidden;
+        }
+      .avatar-show {
+        position: absolute;
+        left: 0;
+        visibility: visible;
+      }
       .avatar {
         width: 30px;
         height: 30px;

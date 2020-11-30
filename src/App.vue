@@ -17,8 +17,9 @@
 
 <script>
 import { mapMutations, mapActions } from 'vuex'
-import { getPlaylistDetail } from 'api'
-import { defaultSheetId, VERSION } from '@/config'
+// import { getPlaylistDetail } from 'api'
+// import { defaultSheetId, VERSION } from '@/config'
+import { VERSION } from '@/config'
 import { createTopList } from '@/utils/song'
 import MmHeader from 'components/mm-header/mm-header'
 import MmDialog from 'base/mm-dialog/mm-dialog'
@@ -43,10 +44,10 @@ export default {
     this.versionBody = VERSIONBODY
 
     // 获取正在播放列表
-    getPlaylistDetail(defaultSheetId).then(playlist => {
-      const list = playlist.tracks.slice(0, 100)
-      this.setPlaylist({ list })
-    })
+    // getPlaylistDetail(defaultSheetId).then(playlist => {
+    //   const list = playlist.tracks.slice(0, 100)
+    //   this.setPlaylist({ list })
+    // })
 
     // 设置title
     let OriginTitile = document.title
@@ -96,7 +97,7 @@ export default {
     // 歌曲数据处理
     _formatSongs(list) {
       let ret = []
-      list.forEach(item => {
+      list.forEach((item) => {
         const musicData = item
         if (musicData.id) {
           ret.push(createTopList(musicData))

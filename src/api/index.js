@@ -5,13 +5,40 @@ import { formatTopSongs } from '@/utils/song'
 axios.defaults.baseURL = process.env.VUE_APP_BASE_API_URL
 
 // 排行榜列表
-export function getToplistDetail() {
-  return axios.get('/toplist/detail')
+export function getUserRecord(uid) {
+  return new Promise((resolve, reject) => {
+    axios
+      .get('/record/user', {
+        'params': {
+          'uid': uid
+        }
+      })
+      .then(({ weekData }) => {
+        if (weekData.length === 0) {
+          resolve({})
+        }
+        const ids = weekData
+          .slice(0, 500)
+          .map(v => v.song.id)
+          .toString()
+        getMusicDetail(ids).then(({ songs }) => {
+          let tracks = formatTopSongs(songs)
+          resolve(tracks)
+        })
+      })
+      .catch(err => {
+        reject(err)
+      })
+  })
 }
 
-// 推荐歌单
-export function getPersonalized() {
-  return axios.get('/personalized')
+// getPlayingList
+export function getPlayingList(uid) {
+  return axios.get('/user/playing', {
+    'params': {
+      'uid': uid
+    }
+  });
 }
 
 // 歌单详情
@@ -19,7 +46,9 @@ export function getPlaylistDetail(id) {
   return new Promise((resolve, reject) => {
     axios
       .get('/playlist/detail', {
-        params: { id }
+        'params': {
+          'id': id
+        }
       })
       .then(({ playlist }) => playlist)
       .then(playlist => {
@@ -44,12 +73,13 @@ export function getPlaylistDetail(id) {
 }
 
 // 搜索
-export function search(keywords, page = 0, limit = defaultLimit) {
+export function search(keywords, type, page = 0, limit = defaultLimit) {
   return axios.get('/search', {
     params: {
       offset: page * limit,
       limit: limit,
-      keywords
+      keywords,
+      type: type || 1
     }
   })
 }
@@ -112,6 +142,15 @@ export function getComment(id, page, limit = defaultLimit) {
       offset: page * limit,
       limit: limit,
       id
+    }
+  })
+}
+// 获取用户评论
+export function getUserComment(id, uid, limit = defaultLimit) {
+  return axios.get('/comment/user', {
+    params: {
+      uid: uid,
+      id: id
     }
   })
 }

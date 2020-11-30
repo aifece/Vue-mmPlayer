@@ -79,6 +79,13 @@
         :size="30"
         @click="modeChange"
       />
+      <!-- 歌词 -->
+      <mm-icon
+        class="icon-color pointer lyric show-960"
+        type="lyric"
+        :size="30"
+        @click="handleOpenLyric"
+      />
 
       <!-- 评论 -->
       <mm-icon
@@ -353,10 +360,21 @@ export default {
         this.$mmToast('还没有播放歌曲哦！')
         return false
       }
-      this.$router.push(`/music/comment/${this.currentMusic.id}`)
+      if (this.$route.path.indexOf('/music/comment') < 0) {
+        this.$router.push(`/music/comment/${this.currentMusic.id}`)
+      } else {
+        if (window.history.length > 1) {
+          this.$router.back()
+        } else {
+          this.$router.push(`/music/talist`)
+        }
+      }
     },
     // 修改音量大小
     volumeChange(percent) {
+      if (typeof (percent) === 'undefined') {
+        percent = 0.1
+      }
       percent === 0 ? (this.isMute = true) : (this.isMute = false)
       this.volume = percent
       this.audioEle.volume = percent
@@ -383,10 +401,14 @@ export default {
     },
     // 查看歌词
     handleOpenLyric() {
-      this.lyricVisible = true
-      this.$nextTick(() => {
-        this.$refs.lyric.clacTop()
-      })
+      if (this.lyricVisible) {
+        this.lyricVisible = false
+      } else {
+        this.lyricVisible = true
+        this.$nextTick(() => {
+          this.$refs.lyric.clacTop()
+        })
+      }
     },
     // 关闭歌词
     handleCloseLyric() {
@@ -444,6 +466,11 @@ export default {
         top: 0;
         z-index: 1;
         cursor: pointer;
+      }
+      &.show {
+        display: block;
+        margin-left: 0;
+        width: 100%;
       }
     }
   }
@@ -531,8 +558,23 @@ export default {
     }
     .mode,
     .comment,
+    .lyric,
     .music-bar-volume {
       margin-left: 20px;
+    }
+    .lyric {
+      border: solid 2px #fff;
+      width: 20px;
+      height: 20px;
+      display: block;
+      position: relative;
+    }
+    .lyric:after {
+      content: '词';
+      font-size: 14px;
+      line-height: 20px;
+      position: absolute;
+      left: 2px;
     }
 
     // 音量控制
@@ -594,6 +636,7 @@ export default {
     .music-content .music-left {
       .music-list {
         font-size: @font_size_medium;
+        height: calc(~'100% - 120px');
       }
     }
 
@@ -628,6 +671,11 @@ export default {
         position: absolute;
         top: 40px;
         right: 5px;
+      }
+      .lyric {
+        position: absolute;
+        top: 42px;
+        right: 50px;
       }
       .music-bar-volume {
         display: none;
